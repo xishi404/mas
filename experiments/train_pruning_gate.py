@@ -35,7 +35,7 @@ import sys
 from datetime import datetime
 from math import isclose
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn
