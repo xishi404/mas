@@ -1,0 +1,83 @@
+# =============================================================
+# Direct dependencies only — let pip resolve transitive deps.
+# Pin major.minor, not patch, to allow compatible installs.
+# torch/torchvision/torchaudio handled separately in Dockerfile.
+# =============================================================
+
+# --- LLM / AI providers ---
+openai>=1.30,<2
+anthropic>=0.18,<1
+dashscope>=1.14,<2
+zhipuai>=2.0,<3
+google-generativeai>=0.4,<1
+qianfan>=0.3,<1
+sparkai>=0.3,<1
+# volcenginesdkarkruntime  # uncomment if needed
+
+# --- ML / NLP ---
+transformers>=4.40,<5
+sentence-transformers>=2.2,<3
+tiktoken>=0.9,<1
+numpy>=1.26,<2
+scipy>=1.12,<2
+scikit-learn>=1.3,<2
+faiss-cpu>=1.7,<2
+pandas>=2.1,<3
+sympy>=1.13,<2
+
+# --- Web / HTTP ---
+aiohttp>=3.8,<4
+httpx>=0.25,<1
+requests>=2.31,<3
+beautifulsoup4>=4.12,<5
+playwright>=1.51,<2
+
+# --- Data formats ---
+PyYAML>=6.0,<7
+pydantic>=2.6,<3
+python-docx>=0.8,<1
+PyPDF2>=3.0,<4
+openpyxl>=3.1,<4
+lxml>=5.3,<6
+jsonlines>=4.0,<5
+
+# --- Framework / tools ---
+loguru>=0.6,<1
+rich>=13.0,<14
+fire>=0.4,<1
+tqdm>=4.66,<5
+tenacity>=8.2,<9
+regex>=2023.10
+python-dotenv>=1.0,<2
+
+# --- Hugging Face ---
+huggingface-hub>=0.25,<1
+
+# --- Code analysis ---
+tree-sitter>=0.23,<1
+tree-sitter-python>=0.23,<1
+libcst>=1.0,<2
+
+# --- Git ---
+GitPython>=3.1,<4
+
+# --- Image ---
+Pillow>=10.4,<11
+opencv-python>=4.8,<5
+
+# --- Search / RAG (optional, uncomment if needed) ---
+# llama-index-core>=0.10,<1
+# chromadb
+# rank-bm25>=0.2,<1
+# meilisearch>=0.21,<1
+
+# --- Misc ---
+aiofiles>=23.2,<24
+networkx>=3.2,<4
+jieba>=0.42,<1
+nest-asyncio>=1.6,<2
+backoff>=2.2,<3
+semantic-kernel>=0.4,<1
+nbformat>=5.9,<6
+nbclient>=0.9,<1
+redis>=5.0,<6

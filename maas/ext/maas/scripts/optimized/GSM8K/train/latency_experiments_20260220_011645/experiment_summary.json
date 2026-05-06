@@ -1,0 +1,44 @@
+{
+  "timestamp": "20260220_011645",
+  "dataset": "GSM8K",
+  "experiments": [
+    {
+      "experiment_name": "token_weight_0_005000",
+      "dataset": "GSM8K",
+      "latency_weight": 0.0,
+      "use_latency": false,
+      "parallel_execution": true,
+      "use_critical_path": true,
+      "normalize_rewards": true,
+      "training": {
+        "score": 0.9346590909090909,
+        "avg_cost": 0.0,
+        "wall_clock_time_seconds": 7772.210759878159,
+        "prompt_tokens": 1784730,
+        "completion_tokens": 1588733,
+        "total_tokens": 3373463
+      },
+      "testing": {
+        "score": 0.9281516587677725,
+        "cost": 0.9938663399999991,
+        "avg_latency": 15.187651663911286,
+        "p90_latency": 30.061683073043827,
+        "total_latency": 16022.972505426407,
+        "prompt_tokens": 1442384,
+        "completion_tokens": 1295847,
+        "total_tokens": 2738232
+      },
+      "log_path": "maas/ext/maas/scripts/optimized/latency_experiments/token_weight_0_005000/GSM8K",
+      "status": "success"
+    }
+  ],
+  "config": {
+    "sample": 4,
+    "round": 1,
+    "batch_size": 4,
+    "lr": 0.01,
+    "weights_tested": [
+      0.005
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+    "Generate": {
+        "description": "Generates an answer to a multiple choice question based on customized input and instruction.",
+        "interface": "generate(input: str, instruction: str) -> dict with key 'response' of type str"
+    },
+    "GenerateCoT": {
+        "description": "Generates an answer using a chain-of-thought approach, providing step-by-step reasoning through options before selecting the final answer. Effective for questions requiring logical reasoning or knowledge application.",
+        "interface": "generate_cot(input: str, instruction: str) -> dict with key 'response' of type str"
+    },
+    "MultiGenerateCoT": {
+        "description": "Generates multiple answers using diverse chain-of-thought reasoning processes to increase answer variety and robustness for multiple choice questions.",
+        "interface": "multi_generate_cot(input: str, instruction: str) -> dict with key 'response' of type List[str]"
+    },
+    "ScEnsemble": {
+        "description": "Uses self-consistency to select the answer that appears most frequently in the solution list, improving selection reliability for multiple choice questions.",
+        "interface": "sc_ensemble(solutions: List[str], problem: str) -> dict with key 'response' of type str"
+    },
+    "Programmer": {
+        "description": "Automatically writes and executes Python code to verify or compute the answer for questions involving calculations, data analysis, or logical verification. Returns the solution based on code execution results.",
+        "interface": "programmer(problem: str, analysis: str = 'None') -> dict with keys 'code' and 'output' of type str"
+    },
+    "SelfRefine": {
+        "description": "Refines the generated answer by reviewing reasoning for errors, checking option selection against the logic, and making iterative improvements to enhance correctness.",
+        "interface": "self_refine(problem: str, solution: str) -> dict with key 'response' of type str"
+    },
+    "EarlyStop": {
+        "description": "This question has been correctly and effectively answered. In order to prevent further activation of operators from wasting resources, we will immediately stop answering this question. Immediately terminates the workflow when selected.",
+        "interface": "early_stop() -> dict with key 'terminate' of type bool"
+    }
+}

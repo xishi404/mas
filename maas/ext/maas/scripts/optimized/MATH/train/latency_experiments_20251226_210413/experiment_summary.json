@@ -1,0 +1,56 @@
+{
+  "timestamp": "20251226_210413",
+  "dataset": "MATH",
+  "experiments": [
+    {
+      "experiment_name": "latency_weight_0_000",
+      "latency_weight": 0.0,
+      "use_latency": true,
+      "train_score": 0.5252100840336135,
+      "train_cost": 0.0,
+      "test_score": 0.5061728395061729,
+      "test_cost": 0.0,
+      "test_avg_latency": 57.05878310978658,
+      "test_p90_latency": 93.62798023223877,
+      "log_path": "maas/ext/maas/scripts/optimized/latency_experiments/latency_weight_0_000/MATH",
+      "status": "success"
+    },
+    {
+      "experiment_name": "latency_weight_0_000",
+      "latency_weight": 0.0001,
+      "use_latency": true,
+      "train_score": 0.5336134453781513,
+      "train_cost": 0.0,
+      "test_score": 0.5205761316872428,
+      "test_cost": 0.0,
+      "test_avg_latency": 30.432043987537117,
+      "test_p90_latency": 55.658552050590515,
+      "log_path": "maas/ext/maas/scripts/optimized/latency_experiments/latency_weight_0_000/MATH",
+      "status": "success"
+    },
+    {
+      "experiment_name": "latency_weight_0_001",
+      "latency_weight": 0.001,
+      "use_latency": true,
+      "train_score": 0.5147058823529411,
+      "train_cost": 0.0,
+      "test_score": 0.5020576131687243,
+      "test_cost": 0.0,
+      "test_avg_latency": 30.06679313467363,
+      "test_p90_latency": 56.17228329181671,
+      "log_path": "maas/ext/maas/scripts/optimized/latency_experiments/latency_weight_0_001/MATH",
+      "status": "success"
+    }
+  ],
+  "config": {
+    "sample": 4,
+    "round": 1,
+    "batch_size": 4,
+    "lr": 0.01,
+    "latency_weights_tested": [
+      0.0,
+      0.0001,
+      0.001
+    ]
+  }
+}

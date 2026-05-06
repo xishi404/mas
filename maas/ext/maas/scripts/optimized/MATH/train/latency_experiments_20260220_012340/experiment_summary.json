@@ -1,0 +1,44 @@
+{
+  "timestamp": "20260220_012340",
+  "dataset": "MATH",
+  "experiments": [
+    {
+      "experiment_name": "token_weight_0_005000",
+      "dataset": "MATH",
+      "latency_weight": 0.0,
+      "use_latency": false,
+      "parallel_execution": true,
+      "use_critical_path": true,
+      "normalize_rewards": true,
+      "training": {
+        "score": 0.523109243697479,
+        "avg_cost": 0.0,
+        "wall_clock_time_seconds": 27716.44677257538,
+        "prompt_tokens": 2725403,
+        "completion_tokens": 3101590,
+        "total_tokens": 5826993
+      },
+      "testing": {
+        "score": 0.5131687242798354,
+        "cost": 1.0174268399999997,
+        "avg_latency": 44.47869861135757,
+        "p90_latency": 88.89353046417236,
+        "total_latency": 21616.64752511978,
+        "prompt_tokens": 1402042,
+        "completion_tokens": 1345200,
+        "total_tokens": 2747243
+      },
+      "log_path": "maas/ext/maas/scripts/optimized/latency_experiments/token_weight_0_005000/MATH",
+      "status": "success"
+    }
+  ],
+  "config": {
+    "sample": 4,
+    "round": 1,
+    "batch_size": 4,
+    "lr": 0.01,
+    "weights_tested": [
+      0.005
+    ]
+  }
+}
