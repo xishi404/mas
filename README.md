@@ -35,25 +35,8 @@ python scripts/sample_mmlu_pro.py            # default: 125 train / 500 test, se
 
 ### Run Experiments
 
-The full pipeline runs four phases automatically:
-
-| Phase | Stage |
-|------:|-------|
-| 1     | Train the controller (Lagrangian-constrained REINFORCE) |
-| 1.5   | Collect DAG traces with the converged controller |
-| 2     | Train the pruning gate (offline MSE on Δ_k = R_k − R_N) |
-| 3     | Test the controller (with the gate) on the held-out test set |
-
-Run a single dataset (replace `MMLU_Pro` with `GSM8K` or `MATH` as needed):
-
 ```bash
 python -m experiments.run_main --dataset MMLU_Pro
-```
-
-Run all three datasets concurrently in tmux windows:
-
-```bash
-./run_all_experiments.sh
 ```
 
 ### Results
