@@ -547,24 +547,23 @@ class BaseBenchmark(ABC):
         latencies_tensor: torch.Tensor  # [batch_size]
     ) -> tuple:
         """
-        Compute loss with critical path aware credit assignment.
+        Compute loss with soft critical-path-aware credit assignment.
 
-        IMPORTANT: This is ONLY used for parallel execution mode.
-        In parallel execution, operators within a layer run concurrently,
-        so only the slowest (max latency) operator in each layer is on the critical path.
+        Each operator's latency penalty is weighted by its longest-path-through ratio:
+            weight_i = longest_path_through(i) / T
+        where longest_path_through(i) = earliest_finish(i) + longest_chain_after(i)
+        and T is the problem's end-to-end latency. Operators on the actual critical
+        path get weight = 1.0; off-CP operators get weight = 1 - slack(i)/T.
 
-        For each layer, identify the critical path operator (max latency).
-        Only critical path operators receive the GLOBAL end-to-end latency penalty.
-        This keeps the latency penalty aligned with score and cost (which are also global).
+        Falls back to the per-layer max heuristic when path lengths are unavailable.
 
         Args:
-            batch_layer_operator_infos: List of dicts with layer operator information
+            batch_layer_operator_infos: List of dicts with layer operator information.
+                Expected keys: log_probs_per_layer, operator_latencies_per_layer,
+                and (optionally) operator_path_lengths_per_layer.
             scores_tensor: Per-problem scores [batch_size] - GLOBAL
             costs_tensor: Per-problem costs [batch_size] - GLOBAL
             latencies_tensor: Per-problem total latencies [batch_size] - GLOBAL
-
-        Returns:
-            Loss tensor (scalar)
         """
         all_log_probs = []
         all_utilities = []
@@ -573,32 +572,29 @@ class BaseBenchmark(ABC):
             layer_info = batch_layer_operator_infos[problem_idx]
             problem_score = scores_tensor[problem_idx].item()
             problem_cost = costs_tensor[problem_idx].item()
-            problem_latency = latencies_tensor[problem_idx].item()  # GLOBAL end-to-end latency
+            problem_latency = latencies_tensor[problem_idx].item()
 
             log_probs_per_layer = layer_info['log_probs_per_layer']
-            operator_names_per_layer = layer_info['operator_names_per_layer']
             operator_latencies_per_layer = layer_info['operator_latencies_per_layer']
+            operator_path_lengths_per_layer = layer_info.get('operator_path_lengths_per_layer')
 
-            # Iterate through each layer
-            for layer_log_probs, layer_names, layer_latencies in zip(
-                log_probs_per_layer, operator_names_per_layer, operator_latencies_per_layer
+            for layer_idx, (layer_log_probs, layer_latencies) in enumerate(
+                zip(log_probs_per_layer, operator_latencies_per_layer)
             ):
                 if len(layer_latencies) == 0:
-                    continue  # Skip empty layers
+                    continue
 
-                # Regular parallel or sequential execution: only max latency operator gets penalized
-                max_latency = max(layer_latencies)
-                max_latency_idx = layer_latencies.index(max_latency)
+                if operator_path_lengths_per_layer is not None and problem_latency > 0:
+                    layer_path_lengths = operator_path_lengths_per_layer[layer_idx]
+                    weights = [pl / problem_latency for pl in layer_path_lengths]
+                else:
+                    max_latency = max(layer_latencies)
+                    weights = [1.0 if lat == max_latency else 0.0 for lat in layer_latencies]
 
-                # Assign utilities to each operator in this layer
                 for op_idx in range(len(layer_latencies)):
-                    if op_idx == max_latency_idx:
-                        # Critical path operator gets GLOBAL latency penalty
-                        utility = problem_score - self.cost_weight * problem_cost - self.latency_weight * problem_latency
-                    else:
-                        # Non-critical operators don't get latency penalty
-                        utility = problem_score - self.cost_weight * problem_cost
-
+                    utility = (problem_score
+                               - self.cost_weight * problem_cost
+                               - weights[op_idx] * self.latency_weight * problem_latency)
                     all_log_probs.append(layer_log_probs[op_idx])
                     all_utilities.append(utility)
 

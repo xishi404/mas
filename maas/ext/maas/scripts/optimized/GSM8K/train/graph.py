@@ -196,6 +196,8 @@ class GSM8KGraph:
 
         # Track per-layer operator latencies for critical path tracking
         operator_latencies_per_layer = []
+        # Per-task longest-path-through length (for soft CP credit weighting)
+        operator_path_lengths_per_layer = []
 
         # Track per-layer operator token counts for virtual token calculation
         operator_token_counts_per_layer = []
@@ -233,6 +235,7 @@ class GSM8KGraph:
             operator_iterations = metrics["operator_iterations"]
             operator_names_per_layer = metrics["operator_names_per_layer"]
             operator_latencies_per_layer = metrics["operator_latencies_per_layer"]
+            operator_path_lengths_per_layer = metrics["operator_path_lengths_per_layer"]
             operator_token_counts_per_layer = metrics["operator_token_counts_per_layer"]
             log_probs_per_layer = sched_log_probs
 
@@ -541,7 +544,8 @@ class GSM8KGraph:
             'log_probs_per_layer': log_probs_per_layer,
             'operator_names_per_layer': operator_names_per_layer,
             'operator_latencies_per_layer': operator_latencies_per_layer,
-            'operator_token_counts_per_layer': operator_token_counts_per_layer,  # NEW: for virtual token calculation
+            'operator_path_lengths_per_layer': operator_path_lengths_per_layer,
+            'operator_token_counts_per_layer': operator_token_counts_per_layer,
         }
 
         # Compute per-problem cost from accumulated tokens

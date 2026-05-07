@@ -276,25 +276,69 @@ def compute_critical_path(plan, task_outputs):
     return cp_finish, chain, cp_finish
 
 
+def compute_path_lengths(plan, task_outputs):
+    """For each task, return the length of the longest start-to-end path passing through it.
+
+    longest_path_through(i) = earliest_finish(i) + longest_chain_after(i)
+      earliest_finish(i)    = start_offset(i) + latency(i)            (already measured)
+      longest_chain_after(i) = max over successors k of (latency(k) + longest_chain_after(k))
+
+    Tasks on the actual critical path get path_length == T (= max over all tasks).
+    Off-critical tasks have path_length < T proportional to their slack.
+    """
+    succs = {tid: [] for tid in plan.task_index}
+    for tid, task in plan.task_index.items():
+        for dep in [task.depends_on_solution] + (task.depends_on_solutions or []):
+            if dep and dep in succs:
+                succs[dep].append(tid)
+
+    latency = {}
+    finish = {}
+    for tid, out in task_outputs.items():
+        latency[tid] = out.get("latency", 0.0)
+        finish[tid] = out.get("_start_offset", 0.0) + latency[tid]
+
+    chain_after = {}
+
+    def _chain_after(tid):
+        if tid in chain_after:
+            return chain_after[tid]
+        if not succs.get(tid):
+            chain_after[tid] = 0.0
+            return 0.0
+        chain_after[tid] = max(latency.get(k, 0.0) + _chain_after(k) for k in succs[tid])
+        return chain_after[tid]
+
+    for tid in plan.task_index:
+        _chain_after(tid)
+
+    return {tid: finish.get(tid, 0.0) + chain_after.get(tid, 0.0)
+            for tid in plan.task_index}
+
+
 def collect_metrics(plan, task_outputs, selection_operator_names):
     """Aggregate per-operator metrics from task outputs."""
     operator_latencies = {}
     operator_iterations = {}
     operator_names_per_layer = []
     operator_latencies_per_layer = []
+    operator_path_lengths_per_layer = []
     operator_token_counts_per_layer = []
     problem_prompt_tokens = 0
     problem_completion_tokens = 0
 
+    path_lengths = compute_path_lengths(plan, task_outputs)
+
     for layer in plan.layers:
         if not layer:
             continue
-        layer_names, layer_lats, layer_toks = [], [], []
+        layer_names, layer_lats, layer_paths, layer_toks = [], [], [], []
         for task in layer:
             result = task_outputs.get(task.task_id, {})
             op_name = result.get("operator", task.operator_name)
             layer_names.append(op_name)
             layer_lats.append(result.get("latency", 0.0))
+            layer_paths.append(path_lengths.get(task.task_id, 0.0))
             layer_toks.append(result.get("cp_token_count", 0))
             problem_prompt_tokens += result.get("_raw_prompt_tokens", 0)
             problem_completion_tokens += result.get("_raw_completion_tokens", 0)
@@ -302,6 +346,7 @@ def collect_metrics(plan, task_outputs, selection_operator_names):
             operator_iterations.setdefault(op_name, []).append(result.get("iterations", 1))
         operator_names_per_layer.append(layer_names)
         operator_latencies_per_layer.append(layer_lats)
+        operator_path_lengths_per_layer.append(layer_paths)
         operator_token_counts_per_layer.append(layer_toks)
 
     return {
@@ -309,6 +354,7 @@ def collect_metrics(plan, task_outputs, selection_operator_names):
         "operator_iterations": operator_iterations,
         "operator_names_per_layer": operator_names_per_layer,
         "operator_latencies_per_layer": operator_latencies_per_layer,
+        "operator_path_lengths_per_layer": operator_path_lengths_per_layer,
         "operator_token_counts_per_layer": operator_token_counts_per_layer,
         "problem_prompt_tokens": problem_prompt_tokens,
         "problem_completion_tokens": problem_completion_tokens,

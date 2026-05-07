@@ -85,6 +85,61 @@ class MMLUProGraph:
 
         logger.info(f"{'='*80}\n")
 
+    async def _dispatch_operator(self, task, dep_solution, task_outputs, problem):
+        """MMLU_Pro-specific operator dispatch for DAG execution (shared with test/graph.py)."""
+        import time
+        op_name = task.operator_name
+        selected_operator = self.selection_operator_instances[op_name]
+        task_start = time.time()
+
+        if op_name in ["Generate", "GenerateCoT"]:
+            result = await selected_operator(input=problem, instruction=self.prompt_module.MMLU_SOLVE_PROMPT, return_usage=True)
+            latency = time.time() - task_start
+            cp_token_count = result.get('_usage_tokens', 0)
+            return result, {"type": "generate", "solution": result.get('response', ""), "operator": op_name, "latency": latency, "iterations": 1, "cp_token_count": cp_token_count, "_raw_prompt_tokens": result.get('_usage_prompt_tokens', 0), "_raw_completion_tokens": result.get('_usage_tokens', 0)}
+        elif op_name == "MultiGenerateCoT":
+            result = await selected_operator(input=problem, instruction=self.prompt_module.MMLU_SOLVE_PROMPT, return_usage=True)
+            latency = time.time() - task_start
+            raw_tokens = result.get('_usage_tokens', 0)
+            if isinstance(result, dict) and 'response' in result:
+                num_iterations = len(result['response']) if isinstance(result['response'], list) else 1
+                cp_token_count = raw_tokens / num_iterations if num_iterations > 0 else raw_tokens
+                return result, {"type": "multi_generate", "solutions": [res.get('response', "") for res in result['response']], "operator": op_name, "latency": latency, "iterations": num_iterations, "cp_token_count": cp_token_count, "_raw_prompt_tokens": result.get('_usage_prompt_tokens', 0), "_raw_completion_tokens": raw_tokens}
+            else:
+                return result, {"type": "multi_generate", "solutions": [], "operator": op_name, "latency": latency, "iterations": 0, "cp_token_count": raw_tokens, "_raw_prompt_tokens": 0, "_raw_completion_tokens": raw_tokens}
+        elif op_name == "SelfRefine":
+            result = await selected_operator(problem=problem, solution=dep_solution, return_usage=True)
+            latency = time.time() - task_start
+            cp_token_count = result.get('_usage_tokens', 0)
+            return result, {"type": "refine", "solution": result.get('response', ""), "operator": op_name, "latency": latency, "iterations": 1, "cp_token_count": cp_token_count, "_raw_prompt_tokens": result.get('_usage_prompt_tokens', 0), "_raw_completion_tokens": result.get('_usage_tokens', 0)}
+        elif op_name == "Programmer":
+            result = await selected_operator(problem=problem, analysis=dep_solution, return_usage=True)
+            refined_solution = await self.custom(input=problem + f"\nCode output: {result['code']}\nExecution result: {result['output']}", instruction=self.prompt_module.REFINE_ANSWER_PROMPT, return_usage=True)
+            latency = time.time() - task_start
+            llm_tokens = result.get('_usage_tokens', 0) + refined_solution.get('_usage_tokens', 0)
+            return {"code": result.get("code", ""), "output": result.get("output", ""), "refined": refined_solution.get("response", "")}, {"type": "programmer", "solution": refined_solution['response'], "operator": op_name, "latency": latency, "iterations": 1, "cp_token_count": llm_tokens, "_raw_prompt_tokens": result.get('_usage_prompt_tokens', 0) + refined_solution.get('_usage_prompt_tokens', 0), "_raw_completion_tokens": result.get('_usage_tokens', 0) + refined_solution.get('_usage_tokens', 0)}
+        elif op_name == "ScEnsemble":
+            resolved_solutions = []
+            if task.depends_on_solutions:
+                for dep_id in task.depends_on_solutions:
+                    if dep_id in task_outputs:
+                        dep = task_outputs[dep_id]
+                        if dep.get("type") == "multi_generate":
+                            resolved_solutions.extend(dep.get("solutions", []))
+                        else:
+                            resolved_solutions.append(dep.get("solution", ""))
+            if not resolved_solutions:
+                latency = time.time() - task_start
+                return "skipped (no solutions)", {"type": "noop", "solution": dep_solution, "operator": op_name, "latency": latency, "iterations": 0, "cp_token_count": 0, "_raw_prompt_tokens": 0, "_raw_completion_tokens": 0}
+            else:
+                result = await selected_operator(problem=problem, solutions=resolved_solutions, return_usage=True)
+                latency = time.time() - task_start
+                cp_token_count = result.get('_usage_tokens', 0)
+                return {"selected": result.get('response', ""), "num_solutions": len(resolved_solutions)}, {"type": "ensemble", "solution": result.get('response', ""), "operator": op_name, "latency": latency, "iterations": 1, "cp_token_count": cp_token_count, "_raw_prompt_tokens": result.get('_usage_prompt_tokens', 0), "_raw_completion_tokens": result.get('_usage_tokens', 0)}
+        else:
+            latency = time.time() - task_start
+            return "noop", {"type": "noop", "solution": dep_solution, "operator": op_name, "latency": latency, "iterations": 0, "cp_token_count": 0, "_raw_prompt_tokens": 0, "_raw_completion_tokens": 0}
+
     async def __call__(self, problem: str, log_path: str = None):
         import time
 
@@ -139,6 +194,8 @@ class MMLUProGraph:
 
         # Track per-layer operator latencies for critical path tracking
         operator_latencies_per_layer = []
+        # Per-task longest-path-through length (for soft CP credit weighting)
+        operator_path_lengths_per_layer = []
 
         # Track per-layer operator token counts for virtual token calculation
         operator_token_counts_per_layer = []
@@ -146,7 +203,41 @@ class MMLUProGraph:
         # Track bottleneck breakdown
         total_operator_time = 0.0
 
-        for layer_idx, selected_names in enumerate(selected_names_layers):
+        # --- Scheduler path ---
+        if self.use_scheduler:
+            from maas.ext.maas.scripts.optimized.scheduler import schedule
+            from maas.ext.maas.scripts.optimized.dag_executor import (
+                execute_dag, compute_critical_path, collect_metrics,
+                reconstruct_solutions, rebuild_log_probs,
+            )
+            plan = schedule(selected_names_layers)
+
+            async def dispatch_fn(task, dep_solution, task_outputs):
+                return await self._dispatch_operator(task, dep_solution, task_outputs, problem)
+
+            task_outputs, total_operator_time, gate_log_probs, _, _gate_state = await execute_dag(
+                plan=plan, problem=problem, dispatch_fn=dispatch_fn,
+                tracer=self.tracer, device=self.device,
+                pruning_gate=None,
+                problem_id=problem[:100], dataset=self.dataset,
+            )
+
+            metrics = collect_metrics(plan, task_outputs, self.selection_operator_names)
+            solutions, current_solution = reconstruct_solutions(plan, task_outputs)
+            sched_log_probs = rebuild_log_probs(plan, probs_layers, self.selection_operator_names, self.device)
+
+            sum_log_prob = sum(log_probs_layers)
+            problem_prompt_tokens = metrics["problem_prompt_tokens"]
+            problem_completion_tokens = metrics["problem_completion_tokens"]
+            operator_latencies = metrics["operator_latencies"]
+            operator_iterations = metrics["operator_iterations"]
+            operator_names_per_layer = metrics["operator_names_per_layer"]
+            operator_latencies_per_layer = metrics["operator_latencies_per_layer"]
+            operator_path_lengths_per_layer = metrics["operator_path_lengths_per_layer"]
+            operator_token_counts_per_layer = metrics["operator_token_counts_per_layer"]
+            log_probs_per_layer = sched_log_probs
+
+        for layer_idx, selected_names in enumerate(selected_names_layers if not self.use_scheduler else []):
             # All operators in the same layer are independent and can run in parallel
             if not selected_names:
                 continue
@@ -420,6 +511,7 @@ class MMLUProGraph:
             'log_probs_per_layer': log_probs_per_layer,
             'operator_names_per_layer': operator_names_per_layer,
             'operator_latencies_per_layer': operator_latencies_per_layer,
+            'operator_path_lengths_per_layer': operator_path_lengths_per_layer,
             'operator_token_counts_per_layer': operator_token_counts_per_layer,
         }
 

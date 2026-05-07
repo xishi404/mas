@@ -76,8 +76,6 @@ def parse_args():
     parser.add_argument("--threshold", type=float, default=0.3)
     parser.add_argument("--max_concurrent", type=int, default=3)
     parser.add_argument("--max_graph_retries", type=int, default=3)
-    parser.add_argument("--acc_baseline", type=float, default=0.0,
-                        help="Accuracy lower bound for the Lagrangian constraint")
     parser.add_argument("--lagrangian_lr", type=float, default=0.1,
                         help="Learning rate for the dual variable lambda_acc")
 
@@ -128,7 +126,7 @@ def main():
     logger.info(f"=== Experiment: {args.dataset} | {experiment_name} ===")
     logger.info(f"Exec model: {args.exec_model_name}, Opt model: {args.opt_model_name}")
     logger.info(f"latency_weight={args.latency_weight}, cost_weight={args.cost_weight}, "
-                f"num_layers={args.num_layers}, acc_baseline={args.acc_baseline}")
+                f"num_layers={args.num_layers}, acc_baseline={config.acc_baseline}")
 
     models_config = ModelsConfig.default()
     opt_llm_config = models_config.get(args.opt_model_name)
@@ -150,7 +148,7 @@ def main():
         num_layers=args.num_layers,
         max_graph_retries=args.max_graph_retries,
         max_concurrent_tasks=args.max_concurrent,
-        acc_baseline=args.acc_baseline,
+        acc_baseline=config.acc_baseline,
         lagrangian_lr=args.lagrangian_lr,
         optimized_path=results_path,
         code_path=code_path,
@@ -201,7 +199,7 @@ def main():
             f"--output_path {gate_output_path} "
             f"--latency_weight {args.latency_weight} "
             f"--cost_weight {args.cost_weight} "
-            f"--acc_baseline {args.acc_baseline} "
+            f"--acc_baseline {config.acc_baseline} "
             f"{lambda_arg} "
             f"--epochs {args.gate_epochs} "
             f"--lr {args.gate_lr}"

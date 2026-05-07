@@ -27,6 +27,12 @@ maas/ext/maas/data/
 └── mmlu_pro_test.jsonl
 ```
 
+For MMLU_Pro, sample the splits from HuggingFace `TIGER-Lab/MMLU-Pro`:
+
+```bash
+python scripts/sample_mmlu_pro.py            # default: 125 train / 500 test, seed 42
+```
+
 ### Run Experiments
 
 The full pipeline runs four phases automatically:
@@ -38,17 +44,10 @@ The full pipeline runs four phases automatically:
 | 2     | Train the pruning gate (offline MSE on Δ_k = R_k − R_N) |
 | 3     | Test the controller (with the gate) on the held-out test set |
 
-Run a single dataset:
+Run a single dataset (replace `MMLU_Pro` with `GSM8K` or `MATH` as needed):
 
 ```bash
-# GSM8K
-python -m experiments.run_main --dataset GSM8K --acc_baseline 0.85
-
-# MATH
-python -m experiments.run_main --dataset MATH --acc_baseline 0.50
-
-# MMLU_Pro
-python -m experiments.run_main --dataset MMLU_Pro --acc_baseline 0.65
+python -m experiments.run_main --dataset MMLU_Pro
 ```
 
 Run all three datasets concurrently in tmux windows:

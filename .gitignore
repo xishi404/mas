@@ -158,3 +158,8 @@ maas/ext/maas/data/*.jsonl
 *.key
 .env
 secrets/
+
+# Local babysit state
+.current_*.txt
+.mmlu_pid.txt
+babysit_*.sh

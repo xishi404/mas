@@ -32,12 +32,6 @@ for arg in "$@"; do
     esac
 done
 
-# Per-dataset acc_baseline (Lagrangian constraint)
-declare -A ACC_BASELINE
-ACC_BASELINE[GSM8K]=0.85
-ACC_BASELINE[MATH]=0.50
-ACC_BASELINE[MMLU_Pro]=0.65
-
 timestamp=$(date +%Y%m%d_%H%M%S)
 session="maas_${timestamp}"
 mkdir -p logs
@@ -46,7 +40,6 @@ tmux new-session -d -s "$session"
 window_num=0
 
 for dataset in GSM8K MATH MMLU_Pro; do
-    ab=${ACC_BASELINE[$dataset]}
     name="${dataset}"
     log="logs/${dataset}_${timestamp}.log"
 
@@ -65,7 +58,6 @@ for dataset in GSM8K MATH MMLU_Pro; do
             --threshold $THRESHOLD \
             --num_layers $NUM_LAYERS \
             --max_concurrent $MAX_CONCURRENT \
-            --acc_baseline $ab \
             $EXTRA_FLAGS \
             2>&1 | tee $log" C-m
 
