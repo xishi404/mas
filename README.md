@@ -27,12 +27,6 @@ maas/ext/maas/data/
 └── mmlu_pro_test.jsonl
 ```
 
-For MMLU_Pro, sample the splits from HuggingFace `TIGER-Lab/MMLU-Pro`:
-
-```bash
-python scripts/sample_mmlu_pro.py            # default: 125 train / 500 test, seed 42
-```
-
 ### Run Experiments
 
 ```bash
