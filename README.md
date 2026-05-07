@@ -56,20 +56,6 @@ Run all three datasets concurrently in tmux windows:
 ./run_all_experiments.sh
 ```
 
-### Useful Flags
-
-| Flag | Effect |
-|------|--------|
-| `--test_only` | Skip Phase 1; load an existing controller checkpoint |
-| `--train_only` | Skip Phase 3 |
-| `--num_test_runs N` | Average over N independent test runs (default: 1) |
-| `--checkpoint_path PATH` | Load a specific controller checkpoint |
-| `--pruning_gate_path PATH` | Load a pre-trained gate (skips Phase 1.5 + 2) |
-| `--latency_weight 0.005` | Latency penalty weight λ_t in the reward |
-| `--cost_weight 3.0` | Cost penalty weight λ_c in the reward |
-| `--acc_baseline 0.85` | Accuracy floor for the Lagrangian constraint |
-| `--num_layers 4` | Number of controller layers |
-
 ### Results
 
 Per-problem CSV results land in:
@@ -80,8 +66,3 @@ maas/ext/maas/scripts/optimized/experiments/<model_tag>/latency_weight_<w>/<DATA
 
 Each CSV row is one test problem and includes score, cost, latency and
 critical-path token counts.
-
-## Acknowledgements
-
-Special thanks to [MaAS](https://github.com/bingreeky/MaAS) for the initial
-codebase and prompt templates this project is built on.
