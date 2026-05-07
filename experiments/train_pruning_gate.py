@@ -19,7 +19,7 @@ Usage:
     python -m experiments.train_pruning_gate \\
         --trace_dir <path/to/traces/round_1> \\
         --dataset GSM8K \\
-        --data_path maas/ext/maas/data/gsm8k_train.jsonl \\
+        --data_path lamas/ext/lamas/data/gsm8k_train.jsonl \\
         --output_path pruning_gate.pth \\
         --latency_weight 0.005 --cost_weight 3.0 \\
         --acc_baseline 0.85 --lambda_acc 1.0
@@ -42,9 +42,9 @@ import torch.nn as nn
 import torch.optim as optim
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from maas.ext.maas.models.pruning_gate import PruningGate
-from maas.ext.maas.models.utils import get_sentence_embedding
-from maas.ext.maas.scripts.optimized.dag_executor import _consensus_key
+from lamas.ext.lamas.models.pruning_gate import PruningGate
+from lamas.ext.lamas.models.utils import get_sentence_embedding
+from lamas.ext.lamas.scripts.optimized.dag_executor import _consensus_key
 
 
 # ============================================================

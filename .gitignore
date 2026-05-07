@@ -145,15 +145,15 @@ tester.txt
 
 # Data directory
 lamas/ext/lamas/data/
-# MaaS-specific
+# LaMaS-specific
 logs/
-maas/ext/maas/scripts/optimized/experiments/
-maas/ext/maas/scripts/optimized/**/round_*/
+lamas/ext/lamas/scripts/optimized/experiments/
+lamas/ext/lamas/scripts/optimized/**/round_*/
 config/config2.yaml
 *.pth
 *.jsonl.bak
 .DS_Store
-maas/ext/maas/data/*.jsonl
+lamas/ext/lamas/data/*.jsonl
 **/config2.yaml
 *.key
 .env
@@ -163,3 +163,6 @@ secrets/
 .current_*.txt
 .mmlu_pid.txt
 babysit_*.sh
+
+# Legacy stale experiment stubs
+lamas/ext/lamas/scripts/optimized/**/latency_experiments_*/

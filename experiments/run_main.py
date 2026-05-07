@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Main experiment runner for MaaS.
+"""Main experiment runner for LaMaS.
 
 End-to-end pipeline:
   Phase 1   - Train controller via Lagrangian-constrained REINFORCE
@@ -27,16 +27,16 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from maas.configs.models_config import ModelsConfig
-from maas.ext.maas.benchmark.experiment_configs import EXPERIMENT_CONFIGS
-from maas.ext.maas.scripts.optimizer import Optimizer
-from maas.logs import logger, define_log_level
+from lamas.configs.models_config import ModelsConfig
+from lamas.ext.lamas.benchmark.experiment_configs import EXPERIMENT_CONFIGS
+from lamas.ext.lamas.scripts.optimizer import Optimizer
+from lamas.logs import logger, define_log_level
 
 
 DATA_PATHS = {
-    "MATH": "maas/ext/maas/data/math_train.jsonl",
-    "GSM8K": "maas/ext/maas/data/gsm8k_train.jsonl",
-    "MMLU_Pro": "maas/ext/maas/data/mmlu_pro_train.jsonl",
+    "MATH": "lamas/ext/lamas/data/math_train.jsonl",
+    "GSM8K": "lamas/ext/lamas/data/gsm8k_train.jsonl",
+    "MMLU_Pro": "lamas/ext/lamas/data/mmlu_pro_train.jsonl",
 }
 
 
@@ -45,7 +45,7 @@ def _load_pruning_gate(path, device):
     if not path:
         return None
     import torch
-    from maas.ext.maas.models.pruning_gate import PruningGate
+    from lamas.ext.lamas.models.pruning_gate import PruningGate
 
     gate = PruningGate()
     checkpoint = torch.load(path, map_location="cpu", weights_only=True)
@@ -61,7 +61,7 @@ def _load_pruning_gate(path, device):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="MaaS main experiment runner")
+    parser = argparse.ArgumentParser(description="LaMaS main experiment runner")
     parser.add_argument("--dataset", type=str, choices=list(EXPERIMENT_CONFIGS.keys()),
                         required=True)
     parser.add_argument("--sample", type=int, default=4, help="Samples per round")
@@ -80,7 +80,7 @@ def parse_args():
                         help="Learning rate for the dual variable lambda_acc")
 
     parser.add_argument("--optimized_path", type=str,
-                        default="maas/ext/maas/scripts/optimized")
+                        default="lamas/ext/lamas/scripts/optimized")
     parser.add_argument("--checkpoint_path", type=str, default=None,
                         help="Explicit controller checkpoint path; bypasses auto-detection")
     parser.add_argument("--pruning_gate_path", type=str, default=None,

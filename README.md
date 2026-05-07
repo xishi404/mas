@@ -1,4 +1,4 @@
-# MaaS — Multi-Agent System with Learned Pruning Gate
+# LaMaS — Multi-Agent System with Learned Pruning Gate
 
 Critical-path-aware Lagrangian optimization of LLM-based multi-agent workflows,
 with an online learned pruning gate for early stopping during DAG execution.
@@ -15,10 +15,10 @@ Configure API keys in `config/config2.yaml` (copy from `config/config2.example.y
 
 ### Dataset Setup
 
-Place the GSM8K, MATH and MMLU_Pro datasets under `maas/ext/maas/data/`:
+Place the GSM8K, MATH and MMLU_Pro datasets under `lamas/ext/lamas/data/`:
 
 ```
-maas/ext/maas/data/
+lamas/ext/lamas/data/
 ├── gsm8k_train.jsonl
 ├── gsm8k_test.jsonl
 ├── math_train.jsonl
@@ -38,7 +38,7 @@ python -m experiments.run_main --dataset MMLU_Pro
 Per-problem CSV results land in:
 
 ```
-maas/ext/maas/scripts/optimized/experiments/<model_tag>/latency_weight_<w>/<DATASET>/test/round_1/*.csv
+lamas/ext/lamas/scripts/optimized/experiments/<model_tag>/latency_weight_<w>/<DATASET>/test/round_1/*.csv
 ```
 
 Each CSV row is one test problem and includes score, cost, latency and

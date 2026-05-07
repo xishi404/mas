@@ -1,5 +1,5 @@
 #!/bin/bash
-# Launch the full MaaS pipeline (Phase 1 → 1.5 → 2 → 3) on each dataset.
+# Launch the full LaMaS pipeline (Phase 1 → 1.5 → 2 → 3) on each dataset.
 # Each dataset runs in its own tmux window so they execute concurrently.
 #
 # Usage:
