@@ -1,7 +1,6 @@
-# LaMaS — Multi-Agent System with Learned Pruning Gate
+# LaMaS
 
-Critical-path-aware Lagrangian optimization of LLM-based multi-agent workflows,
-with an online learned pruning gate for early stopping during DAG execution.
+Critical-path-aware Lagrangian optimization of LLM-based multi-agent workflows.
 
 ## Reproducing Experiments
 
